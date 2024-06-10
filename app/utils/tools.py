@@ -5,7 +5,7 @@ import time
 import requests
 from sqlalchemy import create_engine, text
 
-def map_hospitals_and_create_geom():
+def map_hospitals():
     print('Fetching Hospitals data...')
     
     url = "https://myhospitalsapi.aihw.gov.au/api/v1/reporting-units-downloads/mappings"
@@ -28,44 +28,21 @@ def map_hospitals_and_create_geom():
     with engine.connect() as conn:
         try:
             trans = conn.begin()
-            
-            # Insert DataFrame into the table
             df.to_sql('hospitals', engine, if_exists='replace', index=False)
             print("Hospital mapping inserted successfully into the PostgreSQL database")
-            
-            # Enable PostGIS extension
             print("Enabling PostGIS extension...")
             conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis;"))
-    
-            # Add geom column if it does not exist
-            print("Adding geom column if it does not exist...")
             conn.execute(text("ALTER TABLE hospitals ADD COLUMN IF NOT EXISTS geom geometry(Point, 4326);"))
-
-            # Update geom column with latitude and longitude values
-            print("Updating geom column with latitude and longitude values...")
             conn.execute(text("""
                 UPDATE hospitals
                 SET geom = ST_SetSRID(ST_MakePoint("Longitude", "Latitude"), 4326);
             """))
-            
-            # Commit transaction
             trans.commit()
-            
-            # Verify the column creation
-            print("Verifying the column creation...")
             result = conn.execute(text("""
                 SELECT column_name
                 FROM information_schema.columns
                 WHERE table_name = 'hospitals';
             """))
-            
-            columns = result.fetchall()
-            print("Columns in 'hospitals' table after geom addition:")
-            for col in columns:
-                print(col[0])
-            
-            print("Geom column created and populated successfully")
-        
         except Exception as e:
             print(f"An error occurred: {e}")
             trans.rollback()
