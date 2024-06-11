@@ -3,6 +3,7 @@ import utils.datasets as datasets
 import utils.values as values
 import logging
 import utils.tools as tools
+from utils.trovaid import get_hospitals_selected_id
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -15,7 +16,7 @@ tools.map_hospitals()
 
 datasets_csv = datasets.download_datasets_csv()
 
-datasets_ids = tools.get_ids(datasets_csv[0])
+datasets_ids = get_hospitals_selected_id(MeasureCode= "MYH0006", ReportedMeasureCode="MYH-RM0076")
 values_csv = values.get_values(datasets_ids)
 
 if datasets_csv:
