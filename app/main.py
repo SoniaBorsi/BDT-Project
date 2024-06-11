@@ -3,6 +3,7 @@ import utils.datasets as datasets
 import utils.values as values
 import logging
 import utils.tools as tools
+import utils.prova as prova 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -30,3 +31,5 @@ if values_csv:
 
 tools.consume_from_rabbitmq(spark, "datasets_measurements_reportedmeasurements_queue", datasets.callback_datasets)
 tools.consume_from_rabbitmq(spark, "values_queue", values.callback_values)
+
+prova.start_hospital_map_dashboard()
