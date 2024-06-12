@@ -26,7 +26,49 @@ def create_connection():
     except psycopg2.Error as e:
         st.error(f"Database connection failed: {e}")
         return None
-    
+
+
+def fetch_values():
+    """Fetch data from the database."""
+    try:
+        conn = create_connection()  # Establish database connection
+
+        # SQL query to fetch data
+        sql_query = '''
+            SELECT 
+                hm."Name" AS "HospitalName", 
+                hm."Type" AS "HospitalType", 
+                hm."State" AS "State", 
+                v."DataSetId", 
+                ds."DatasetName", 
+                COUNT(v."Value") AS "Occurrences" 
+            FROM 
+                values v 
+            JOIN 
+                hospital_mapping hm ON v."ReportingUnitCode" = hm."Code" 
+            JOIN 
+                datasets ds ON v."DataSetId"::INTEGER = ds."DataSetId" 
+            GROUP BY 
+                hm."Name", 
+                hm."Type", 
+                hm."State", 
+                v."DataSetId", 
+                ds."DatasetName"
+
+        '''
+
+        # Execute SQL query and fetch data into a DataFrame
+        df = pd.read_sql(sql_query, conn)
+
+        # Close database connection
+        conn.close()
+
+        return df
+    except psycopg2.Error as e:
+        st.error(f"Failed to fetch data: {e}")
+        return pd.DataFrame()
+
+
 def fetch_data(sql):
     """Fetch data from the database based on SQL query."""
     conn = create_connection()
@@ -62,6 +104,28 @@ def display_home_page():
     st.plotly_chart(fig)
 
 
+#measurements 
+    
+def display_measures():
+    """Display measures fetched from the database."""
+    st.title("Measures")
+    
+    df = fetch_values()
+    
+    if not df.empty:
+        fig1 = px.bar(df, x='Occurrences', y='HospitalName', orientation='h',
+                     title='Occurrences by Hospital Name', labels={'HospitalName': 'Hospital Name'})
+        st.plotly_chart(fig1)
+
+        fig2 = px.bar(df, x='Occurrences', y='DatasetName', orientation='h',
+                     title='Occurrences by Dataset Name', labels={'DatasetName': 'Dataset Name'})
+        st.plotly_chart(fig2)
+
+    else:
+        st.write("No measures found.")
+    
+
+# hospitals 
 def display_hospitals():
     """Display hospitals on a map, as a pie chart, and in a table."""
     st.title("Hospitals")
@@ -115,6 +179,7 @@ def display_hospitals():
     else:
         st.write("No hospitals found with the selected criteria.")
 
+#chat
 def display_chatbot():
     """Display a chatbot interface."""
     st.title("Chat with our Healthcare Bot")
@@ -147,13 +212,15 @@ def process_user_message(user_message):
 
 if __name__ == '__main__':
     st.sidebar.title("Healthcare Resource Allocation")
-    menu = ['Home', 'Hospitals', 'Chat']
+    menu = ['Home', 'Measures', 'Hospitals', 'Chat']
     choice = st.sidebar.selectbox("Menu", menu)
 
     if choice == 'Home':
         st.subheader("Home")
         st.write("Welcome to the Healthcare Resource Allocation Dashboard.")
         display_home_page()
+    elif choice == 'Measures':
+        display_measures()
     elif choice == 'Hospitals':
         display_hospitals()
     elif choice == 'Chat':
