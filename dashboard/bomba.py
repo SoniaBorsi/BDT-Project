@@ -7,14 +7,12 @@ from streamlit_folium import folium_static
 from streamlit_chat import message
 import streamlit as st
 
-# Database connection parameters
 POSTGRES_ADDRESS = 'localhost'
 POSTGRES_PORT = '5432'
 POSTGRES_USERNAME = 'myuser'
 POSTGRES_PASSWORD = 'mypassword'
 POSTGRES_DBNAME = 'mydatabase'
 
-# Function to create database connection
 def create_connection():
     """Establish a connection to the database."""
     try:
@@ -28,8 +26,7 @@ def create_connection():
     except psycopg2.Error as e:
         st.error(f"Database connection failed: {e}")
         return None
-
-# Function to fetch data from the database
+    
 def fetch_data(sql):
     """Fetch data from the database based on SQL query."""
     conn = create_connection()
@@ -42,7 +39,7 @@ def fetch_data(sql):
             st.error(f"Failed to fetch data: {e}")
     return pd.DataFrame()
 
-# Function to display the home page
+# home page
 def display_home_page():
     st.title("Welcome to Healthcare Resource Allocation")
     st.write("""
@@ -54,7 +51,7 @@ def display_home_page():
         
         Start exploring the available features to gain insights into healthcare resource allocation.
     """)
-    # Add general plots or any other content you want to display on the home page
+
     st.markdown("### General Plots")
     # Example plot
     df = pd.DataFrame({
@@ -90,7 +87,7 @@ def display_hospitals():
 
     state_counts = pd.merge(private_hospitals, public_hospitals, on='State', suffixes=('_private', '_public'), how='outer').fillna(0)
 
-    # Display a pie chart for the total private and public hospitals in Australia
+    #pie chart for the total private and public hospitals in Australia
     total_private_hospitals = private_hospitals['Number of Hospitals'].sum() if not private_hospitals.empty else 0
     total_public_hospitals = public_hospitals['Number of Hospitals'].sum() if not public_hospitals.empty else 0
 
@@ -98,13 +95,13 @@ def display_hospitals():
                  title="Total Private and Public Hospitals in Australia")
     st.plotly_chart(fig_pie)
 
-    # Display a histogram for the number of private and public hospitals per state
+    #histogram for the number of private and public hospitals per state
     fig_hist = px.bar(state_counts, x='State', y=['Number of Hospitals_private', 'Number of Hospitals_public'], barmode='group', 
                  title="Number of Private and Public Hospitals per State", labels={'value': 'Number of Hospitals', 'variable': 'Hospital Type'})
     fig_hist.update_layout(xaxis_title="State", yaxis_title="Count")
     st.plotly_chart(fig_hist)
 
-    # Display hospitals based on selected state, open/closed status, and sector
+    # hospitals based on selected state, open/closed status, and sector
     selected_state = st.selectbox("Select State", df['State'].unique())
     selected_status = st.selectbox("Select Open/Closed", df['Open/Closed'].unique())
     selected_sector = st.selectbox("Select Sector", df['Sector'].unique())
@@ -125,7 +122,6 @@ def display_chatbot():
     if st.button("Send"):
         process_user_message(user_input.strip().lower())
 
-# Function to process and respond to the user's message based on predefined responses
 def process_user_message(user_message):
     """Process and respond to the user's message based on predefined responses."""
     responses = {
