@@ -87,13 +87,18 @@ def display_home_page():
     st.write("""
         This application is designed to facilitate healthcare resource allocation through data visualization and a chatbot interface.
         
-        Use the sidebar to navigate through different sections:
-        - Visualization Types: Select from Histogram, Pie Chart, Hospitals, or Chatbot.
-        - Hide Sidebar: Toggle the visibility of the sidebar.
-        
-        Start exploring the available features to gain insights into healthcare resource allocation.
+        Use the buttons below to navigate to different sections:
     """)
-
+    
+    if st.button('Measures'):
+        st.session_state['page'] = 'measures'
+    if st.button('Hospitals'):
+        st.session_state['page'] = 'hospitals'
+    if st.button('Chat'):
+        st.session_state['page'] = 'chat'
+    if st.button('Predictions'):
+        st.session_state['page'] = 'predictions'
+    
     st.markdown("### General Plots")
     # Example plot
     df = pd.DataFrame({
@@ -109,6 +114,8 @@ def display_home_page():
 def display_measures():
     """Display measures fetched from the database."""
     st.title("Measures")
+    if st.button("Return to Home"):
+        st.session_state['page'] = 'home'
     
     df = fetch_values()
     
@@ -123,12 +130,17 @@ def display_measures():
 
     else:
         st.write("No measures found.")
+
     
 
 # hospitals 
+        
 def display_hospitals():
     """Display hospitals on a map, as a pie chart, and in a table."""
     st.title("Hospitals")
+
+    if st.button("Return to Home"):
+        st.session_state['page'] = 'home'
     
     # Fetch hospital data from the database
     df = fetch_data('SELECT "Latitude", "Longitude", "Name", "Type", "Sector", "Open/Closed", "State" FROM hospital_mapping')
@@ -178,6 +190,14 @@ def display_hospitals():
         st.table(filtered_df)
     else:
         st.write("No hospitals found with the selected criteria.")
+    
+
+#predictions 
+
+def display_predictions():
+    if st.button("Return to Home"):
+        st.session_state['page'] = 'home'     
+
 
 #chat
 def display_chatbot():
@@ -186,6 +206,8 @@ def display_chatbot():
     user_input = st.text_input("Message", key="chat_input")
     if st.button("Send"):
         process_user_message(user_input.strip().lower())
+    if st.button("Return to Home"):
+        st.session_state['page'] = 'home'
 
 def process_user_message(user_message):
     """Process and respond to the user's message based on predefined responses."""
@@ -209,20 +231,42 @@ def process_user_message(user_message):
     for i in range(len(st.session_state.past)):
         st.write(st.session_state.past[i])
         st.write(st.session_state.generated[i])
+    if st.button("Return to Home"):
+        st.session_state['page'] = 'home'
 
-if __name__ == '__main__':
-    st.sidebar.title("Healthcare Resource Allocation")
-    menu = ['Home', 'Measures', 'Hospitals', 'Chat']
-    choice = st.sidebar.selectbox("Menu", menu)
+# if __name__ == '__main__':
+#     st.sidebar.title("Healthcare Resource Allocation")
+#     menu = ['Home', 'Measures', 'Hospitals', 'Chat', 'Predictions']
+#     choice = st.sidebar.selectbox("Menu", menu)
 
-    if choice == 'Home':
-        st.subheader("Home")
-        st.write("Welcome to the Healthcare Resource Allocation Dashboard.")
+#     if choice == 'Home':
+#         st.subheader("Home")
+#         st.write("Welcome to the Healthcare Resource Allocation Dashboard.")
+#         display_home_page()
+#     elif choice == 'Measures':
+#         display_measures()
+#     elif choice == 'Hospitals':
+#         display_hospitals()
+#     elif choice == 'Predictions':
+#         display_predictions()
+#     elif choice == 'Chat':
+#         display_chatbot()
+
+
+def main():
+    if 'page' not in st.session_state:
+        st.session_state['page'] = 'home'
+        
+    if st.session_state['page'] == 'home':
         display_home_page()
-    elif choice == 'Measures':
+    elif st.session_state['page'] == 'measures':
         display_measures()
-    elif choice == 'Hospitals':
+    elif st.session_state['page'] == 'hospitals':
         display_hospitals()
-    elif choice == 'Chat':
+    elif st.session_state['page'] == 'predictions':
+        display_predictions()
+    elif st.session_state['page'] == 'chat':
         display_chatbot()
 
+if __name__ == '__main__':
+    main()
